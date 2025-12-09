@@ -38,6 +38,23 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+
+    fun signup(name: String, email: String, password: String) {
+        if (email.isEmpty() || password.isEmpty() || name.isEmpty()) {
+            _authState.value = AuthState.Error("Name or Email or Password can't be empty.")
+            return
+        }
+
+        _authState.value = AuthState.Loading
+        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
+                task ->
+            if(task.isSuccessful) {
+                _authState.value = AuthState.Authenticated
+            } else {
+                _authState.value = AuthState.Error(task.exception?.message?:"Server Error. Please Wait...")
+            }
+        }
+    }
 }
 
 sealed class AuthState {
