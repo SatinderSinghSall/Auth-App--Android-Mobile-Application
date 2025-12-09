@@ -20,13 +20,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.authapp.AuthNewModel
+import com.example.authapp.AuthViewModel
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController? = null,
-    authNewModel: AuthNewModel? = null
+    authViewModel: AuthViewModel? = null
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
