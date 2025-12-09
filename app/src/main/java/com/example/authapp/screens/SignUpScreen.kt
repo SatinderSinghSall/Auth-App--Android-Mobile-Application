@@ -155,6 +155,7 @@ fun SignUpScreen(
                     onClick = {
                         authViewModel?.signup(fullName, email, password)
                     },
+                    enabled = authState?.value != AuthState.Loading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),

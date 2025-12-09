@@ -138,6 +138,7 @@ fun LoginScreen(
                     onClick = {
                         authViewModel?.login(email, password)
                     },
+                    enabled = authState?.value != AuthState.Loading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
