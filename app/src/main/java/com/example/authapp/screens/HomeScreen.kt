@@ -2,6 +2,7 @@ package com.example.authapp.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +15,6 @@ import androidx.navigation.NavController
 import com.example.authapp.AuthState
 import com.example.authapp.AuthViewModel
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.automirrored.filled.Logout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,9 +26,10 @@ fun HomeScreen(
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var selectedItem by remember { mutableIntStateOf(0) }
 
-    // Auth redirect
+    var selectedItem by remember { mutableIntStateOf(0) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(authState?.value) {
         if (authState?.value is AuthState.Unauthenticated) {
             navController?.navigate("login")
@@ -48,14 +49,19 @@ fun HomeScreen(
                 NavigationDrawerItem(
                     label = { Text("Home") },
                     selected = true,
-                    onClick = { scope.launch { drawerState.close() } },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                    },
                     icon = { Icon(Icons.Default.Home, null) }
                 )
 
                 NavigationDrawerItem(
                     label = { Text("Logout") },
                     selected = false,
-                    onClick = { authViewModel?.signout() },
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        showLogoutDialog = true
+                    },
                     icon = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Logout,
@@ -135,6 +141,31 @@ fun HomeScreen(
                 Text("You are successfully logged in.")
             }
         }
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Confirm Logout") },
+            text = { Text("Are you sure you want to log out?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        authViewModel?.signout()
+                    }
+                ) {
+                    Text("Logout")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
