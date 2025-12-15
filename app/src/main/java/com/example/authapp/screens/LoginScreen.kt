@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.authapp.AuthState
 import com.example.authapp.AuthViewModel
+import com.example.authapp.ui.components.FullScreenLoading
 
 @Composable
 fun LoginScreen(
@@ -40,128 +41,153 @@ fun LoginScreen(
     val context = LocalContext.current
 
     LaunchedEffect(authState?.value) {
-        when(authState?.value) {
-            is AuthState.Authenticated -> navController?.navigate("home")
-            is AuthState.Error -> Toast.makeText(context, (authState.value as AuthState.Error).message, Toast.LENGTH_LONG).show()
+        when (authState?.value) {
+            is AuthState.Authenticated -> {
+                navController?.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+            is AuthState.Error -> {
+                Toast.makeText(
+                    context,
+                    (authState.value as AuthState.Error).message,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
             else -> Unit
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        MaterialTheme.colorScheme.background
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.background
+                        )
                     )
                 )
-            )
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        // Title Area
-        Text(
-            text = "Welcome Back",
-            fontSize = 32.sp,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Text(
-            text = "Login to continue",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 28.dp)
-        )
-
-        // Card Wrapper
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(elevation = 10.dp, shape = RoundedCornerShape(20.dp)),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
+            Text(
+                text = "Welcome Back",
+                fontSize = 32.sp,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
 
-                // Email Input
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    singleLine = true,
-                    leadingIcon = {
-                        Icon(Icons.Default.Email, contentDescription = "Email Icon")
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+            Text(
+                text = "Login to continue",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp, bottom = 28.dp)
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(10.dp, RoundedCornerShape(20.dp)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
 
-                Spacer(modifier = Modifier.height(18.dp))
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Email, contentDescription = null)
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                // Password Input
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    singleLine = true,
-                    leadingIcon = {
-                        Icon(Icons.Default.Lock, contentDescription = "Password Icon")
-                    },
-                    trailingIcon = {
-                        IconButton(onClick = { showPassword = !showPassword }) {
-                            Icon(
-                                imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = "Toggle Password"
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, contentDescription = null)
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { showPassword = !showPassword }) {
+                                Icon(
+                                    imageVector = if (showPassword)
+                                        Icons.Default.VisibilityOff
+                                    else
+                                        Icons.Default.Visibility,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        visualTransformation = if (showPassword)
+                            VisualTransformation.None
+                        else
+                            PasswordVisualTransformation(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(26.dp))
+
+                    Button(
+                        onClick = {
+                            authViewModel?.login(email, password)
+                        },
+                        enabled = authState?.value != AuthState.Loading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        if (authState?.value == AuthState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Logging in...")
+                        } else {
+                            Text(
+                                text = "Login",
+                                fontSize = 18.sp,
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
-                    },
-                    visualTransformation = if (showPassword) VisualTransformation.None
-                    else PasswordVisualTransformation(),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(26.dp))
-
-                // Login Button
-                Button(
-                    onClick = {
-                        authViewModel?.login(email, password)
-                    },
-                    enabled = authState?.value != AuthState.Loading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Text(
-                        "Login",
-                        fontSize = 18.sp,
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            TextButton(
+                onClick = { navController?.navigate("signup") }
+            ) {
+                Text(
+                    text = "Don't have an account? Sign Up",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 15.sp
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Signup Text
-        TextButton(onClick = { navController?.navigate("signup") }) {
-            Text(
-                text = "Don't have an account? Sign Up",
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 15.sp
-            )
+        if (authState?.value == AuthState.Loading) {
+            FullScreenLoading("Logging in...")
         }
     }
 }
